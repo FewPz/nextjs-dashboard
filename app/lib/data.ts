@@ -8,6 +8,8 @@ import {
   Revenue,
 } from './definitions';
 import { formatCurrency } from './utils';
+import { signIn } from '@/auth';
+import { AuthError } from 'next-auth';
 
 export async function fetchRevenue() {
   try {
@@ -116,6 +118,25 @@ export async function fetchFilteredInvoices(
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch invoices.');
+  }
+}
+
+export async function authenticate(
+  prevState: string | undefined,
+  formData: FormData,
+) {
+  try {
+    await signIn('credentials', formData);
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case 'CredentialsSignin':
+          return 'Invalid credentials.';
+        default:
+          return 'Something went wrong.';
+      }
+    }
+    throw error;
   }
 }
 
